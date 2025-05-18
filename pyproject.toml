@@ -3,14 +3,14 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
-name = "bitvoker"
+name = "LogForge"
 version = "0.1.0"
-description = "bitvoker notification system"
+description = "LogForge notification system"
 authors = ["Rasool Fatemi <rmfatemi@gmail.com>"]
 readme = "README.md"
 
 packages = [
-    { include = "bitvoker" }
+    { include = "logforge" }
 ]
 
 [tool.poetry.dependencies]
@@ -22,7 +22,7 @@ uvicorn = "^0.34.2"
 fastapi = "^0.115.12"
 
 [tool.poetry.scripts]
-bitvoker = "bitvoker.server:main"
+LogForge = "logforge.server:main"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.0.0"
@@ -38,6 +38,6 @@ line-length = 120
 target-version = "py311"
 line-length = 120
 include = [
-    "bitvoker/**/*.py",
+    "logforge/**/*.py",
     "*.py"
 ]

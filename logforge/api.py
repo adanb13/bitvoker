@@ -1,8 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from bitvoker.router import api_router
-
+from logforge.router import api_router
 
 app = FastAPI()
 

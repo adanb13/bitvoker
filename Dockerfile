@@ -23,7 +23,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN pip install poetry
 
 COPY pyproject.toml poetry.lock* README.md ./
-COPY bitvoker/ bitvoker/
+COPY logforge/ logforge/
 
 RUN poetry config virtualenvs.create false && \
     poetry install --no-interaction --no-ansi

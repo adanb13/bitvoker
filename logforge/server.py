@@ -1,16 +1,15 @@
-import ssl
-import uvicorn
-import threading
 import socketserver
+import ssl
+import threading
 
-import bitvoker.constants as constants
+import uvicorn
 
-from bitvoker.api import app
-from bitvoker.handler import Handler
-from bitvoker.logger import setup_logger
-from bitvoker.utils import generate_ssl_cert
-from bitvoker.components import refresh_server_components
-
+import logforge.constants as constants
+from logforge.api import app
+from logforge.components import refresh_server_components
+from logforge.handler import Handler
+from logforge.logger import setup_logger
+from logforge.utils import generate_ssl_cert
 
 logger = setup_logger("server")
 
@@ -63,8 +62,8 @@ def start_web_server():
         app,
         host=constants.SERVER_HOST,
         port=constants.WEB_SERVER_PORT,
-        ssl_keyfile=str(constants.KEY_PATH),
-        ssl_certfile=str(constants.CERT_PATH),
+        # ssl_keyfile=str(constants.KEY_PATH),
+        # ssl_certfile=str(constants.CERT_PATH),
     )
     logger.info("web server started")
 

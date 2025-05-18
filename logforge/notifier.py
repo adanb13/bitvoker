@@ -1,8 +1,7 @@
 import requests
 
-from bitvoker.utils import truncate
-from bitvoker.logger import setup_logger
-
+from logforge.logger import setup_logger
+from logforge.utils import truncate
 
 logger = setup_logger("notifier")
 
@@ -69,7 +68,7 @@ class Notifier:
         except requests.exceptions.RequestException as e:
             logger.error(f"failed to send gotify message for {config.get('name', 'gotify')}: {e}")
 
-    def send_message(self, message_body, title="bitvoker notification"):
+    def send_message(self, message_body, title="LogForge notification"):
         if not self.channels_config:
             logger.warning("no notification channels configured")
             return

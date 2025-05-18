@@ -1,8 +1,7 @@
 from meta_ai_api import MetaAI
 
-from bitvoker.utils import truncate
-from bitvoker.logger import setup_logger
-
+from logforge.logger import setup_logger
+from logforge.utils import truncate
 
 logger = setup_logger("ai")
 

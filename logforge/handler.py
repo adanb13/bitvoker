@@ -1,12 +1,10 @@
 import socketserver
+from time import localtime, strftime
 
-from time import strftime, localtime
-
-from bitvoker.utils import truncate
-from bitvoker.logger import setup_logger
-from bitvoker.database import insert_notification
-from bitvoker.components import refresh_server_components
-
+from logforge.components import refresh_server_components
+from logforge.database import insert_notification
+from logforge.logger import setup_logger
+from logforge.utils import truncate
 
 logger = setup_logger("handler")
 

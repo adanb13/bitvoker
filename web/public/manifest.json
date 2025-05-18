@@ -1,6 +1,6 @@
 {
-  "short_name": "bitvoker",
-  "name": "bitvoker Notification System",
+  "short_name": "LogForge",
+  "name": "LogForge Notification System",
   "icons": [],
   "start_url": ".",
   "display": "standalone",

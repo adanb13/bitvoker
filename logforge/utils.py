@@ -1,8 +1,7 @@
 import os
 
-import bitvoker.constants as constants
-
-from bitvoker.logger import setup_logger
+import logforge.constants as constants
+from logforge.logger import setup_logger
 
 logger = setup_logger("utils")
 
@@ -25,7 +24,7 @@ def generate_ssl_cert():
     os.makedirs(constants.DATA_DIR, exist_ok=True)
     cmd = (
         f"openssl req -x509 -newkey rsa:4096 -keyout {constants.KEY_PATH} -out {constants.CERT_PATH} "
-        f'-days 365 -nodes -subj "/CN=bitvoker" -addext "subjectAltName=DNS:{constants.SERVER_HOST}"'
+        f'-days 365 -nodes -subj "/CN=LogForge" -addext "subjectAltName=DNS:{constants.SERVER_HOST}"'
     )
     result = os.system(cmd)
     if result != 0:

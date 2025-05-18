@@ -1,8 +1,7 @@
-from bitvoker.ai import AI
-from bitvoker.config import Config
-from bitvoker.notifier import Notifier
-from bitvoker.logger import setup_logger
-
+from logforge.ai import AI
+from logforge.config import Config
+from logforge.logger import setup_logger
+from logforge.notifier import Notifier
 
 logger = setup_logger("components")
 

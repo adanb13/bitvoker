@@ -1,6 +1,6 @@
 import sqlite3
 
-from bitvoker.constants import DB_FILENAME
+from logforge.constants import DB_FILENAME
 
 
 def init_db():
