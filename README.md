@@ -1,6 +1,3 @@
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/2b2ed949-fa68-4de4-83c7-546067cfd8ba" width="500">
-</p>
 
 **LogForge-Notifier** is an open-source, dynamic notification system built to streamline automated alerts in both homelab setups and production environments. It operates via a dedicated TCP server that accepts messages and can optionally refine them with AI-generated summaries before dispatching notifications through multiple channels such as Telegram, Discord, Slack, and more.
 
@@ -26,10 +23,6 @@
 > Unauthenticated prompts are subject to usage limits. If you are sending hundreds of notifications per day to **LogForge-Notifier**, it is recommended that you disable the AI feature when you encounter a rate limit. Support for selective AI summary to help avoid this issue will be available in a future release.
 
 ## Setup
-This repository supports two ways of running **LogForge-Notifier**. For a consistent and isolated environment, using Docker is recommended.
-
-### Docker
-
 Create a `docker-compose.yaml` file copy the following inside it:
 
 ```
