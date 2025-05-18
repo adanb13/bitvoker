@@ -23,10 +23,6 @@
 > Unauthenticated prompts are subject to usage limits. If you are sending hundreds of notifications per day to **LogForge-Notifier**, it is recommended that you disable the AI feature when you encounter a rate limit. Support for selective AI summary to help avoid this issue will be available in a future release.
 
 ## Setup
-This repository supports two ways of running **LogForge-Notifier**. For a consistent and isolated environment, using Docker is recommended.
-
-### Docker
-
 Create a `docker-compose.yaml` file copy the following inside it:
 
 ```
