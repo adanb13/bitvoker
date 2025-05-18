@@ -6,16 +6,27 @@ function Header({toggleTheme, theme}) {
             <div className="logo-container">
                 <h1>LogForge</h1>
             </div>
-            <button
-                id="themeToggle"
-                className="theme-toggle-button"
-                type="button"
-                aria-label="Toggle theme"
-                onClick={toggleTheme}
-            >
-                Toggle Theme
-            </button>
-        </header>
+ <div className="header-actions">
+        <button
+          id="themeToggle"
+          className="theme-toggle-button"
+          type="button"
+          aria-label="Toggle theme"
+          onClick={toggleTheme}
+        >
+          Toggle Theme
+        </button>
+        <button
+            className="premium-button"
+            type="button"
+            onClick={() =>
+            window.open("https://log-forge.github.io/logforgeweb/#premium", "_blank")
+            }
+        >
+            Need a custom notification channel? Try Premium
+        </button>
+      </div>
+    </header>
     );
 }
 
