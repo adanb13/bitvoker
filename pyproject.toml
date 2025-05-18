@@ -6,7 +6,7 @@ build-backend = "poetry.core.masonry.api"
 name = "LogForge"
 version = "0.1.0"
 description = "LogForge notification system"
-authors = ["Rasool Fatemi <rmfatemi@gmail.com>"]
+authors = ["LogForge <logforge@gmail.com>"]
 readme = "README.md"
 
 packages = [

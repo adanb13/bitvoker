@@ -2,7 +2,7 @@
   <img src="https://github.com/user-attachments/assets/2b2ed949-fa68-4de4-83c7-546067cfd8ba" width="500">
 </p>
 
-**bitvoker** is an open-source, dynamic notification system built to streamline automated alerts in both homelab setups and production environments. It operates via a dedicated TCP server that accepts messages and can optionally refine them with AI-generated summaries before dispatching notifications through multiple channels such as Telegram, Discord, Slack, and more.
+**LogForge-Notifier** is an open-source, dynamic notification system built to streamline automated alerts in both homelab setups and production environments. It operates via a dedicated TCP server that accepts messages and can optionally refine them with AI-generated summaries before dispatching notifications through multiple channels such as Telegram, Discord, Slack, and more.
 
 ## Features
 
@@ -23,10 +23,10 @@
 > The AI summary feature is not available in all regions due to [Meta AI](https://www.meta.ai/)'s regional limitations.
 
 >[!TIP]
-> Unauthenticated prompts are subject to usage limits. If you are sending hundreds of notifications per day to **bitvoker**, it is recommended that you disable the AI feature when you encounter a rate limit. Support for selective AI summary to help avoid this issue will be available in a future release.
+> Unauthenticated prompts are subject to usage limits. If you are sending hundreds of notifications per day to **LogForge-Notifier**, it is recommended that you disable the AI feature when you encounter a rate limit. Support for selective AI summary to help avoid this issue will be available in a future release.
 
 ## Setup
-This repository supports two ways of running **bitvoker**. For a consistent and isolated environment, using Docker is recommended.
+This repository supports two ways of running **LogForge-Notifier**. For a consistent and isolated environment, using Docker is recommended.
 
 ### Docker
 
@@ -34,53 +34,30 @@ Create a `docker-compose.yaml` file copy the following inside it:
 
 ```
 services:
-  bitvoker:
-    image: ghcr.io/rmfatemi/bitvoker:latest
-    container_name: bitvoker
+  LogForge-Notifier:
+    image: docker.io/madanb13/logforge-notifier:latest
+    container_name: LogForge-Notifier
     ports:
       - "8083:8083"    # plain text tcp server
       - "8084:8084"    # secure tcp server
       - "8085:8085"    # web ui
     volumes:
-      - bitvoker_data:/app/data
+      - logforge_notification_data:/app/data
       - /etc/localtime:/etc/localtime:ro
     restart: unless-stopped
 
 volumes:
-  bitvoker_data:
-    name: bitvoker_data
+  logforge_notification_data:
+    name: logforge_notification_data
 ```
 Then start the service with:
 ```
 docker-compose up -d
 ```
-### Standalone Installation
-### Prerequisites
-
-- Python 3.11 or higher
-- [Poetry](https://python-poetry.org/docs/#installation) package manager
-- [GNU Make](https://www.gnu.org/software/make/) utility
-  -    `sudo apt-get install make` (Debian-based Linux), or `brew install make` (macOS)
-1. Clone the repository:
-    ```bash
-    git clone https://github.com/rmfatemi/bitvoker.git
-    cd bitvoker
-    ```
-
-2. Install dependencies:
-    ```bash
-    make install
-    ```
-
-3. Run the application:
-    ```bash
-    poetry run bitvoker
-    ```
-
 
 ## 📖 Usage
 
-Send messages to **bitvoker**’s notification endpoint using nc (netcat) or openssl for secure connections.
+Send messages to **LogForge-Notifier**’s notification endpoint using nc (netcat) or openssl for secure connections.
 
 #### Plain text connection (Port 8083):
 
@@ -90,7 +67,7 @@ Using `nc`: `echo "Your notification message" | nc <server-ip> 8083`
 
 Using `openssl`: `echo "Your notification message" | openssl s_client -connect <server-ip>:8084`
 
-**bitvoker** is designed for both automated recurring notifications and one-time alerts. Below are some creative usage scenarios:
+**LogForge-Notifier** is designed for both automated recurring notifications and one-time alerts. Below are some creative usage scenarios:
 
 1. **Daily Automated Rsync Backup Notification (Cron Job):**
     ```bash
@@ -125,7 +102,7 @@ Using `openssl`: `echo "Your notification message" | openssl s_client -connect <
     ```
 
 6. **Docker Event Notification:**
-    Pipe Docker events directly to **bitvoker**:
+    Pipe Docker events directly to **LogForge-Notifier**:
     ```bash
     docker events --filter 'event=start' --filter 'event=stop' | while read event; do
       echo "Docker Event: $event" | openssl s_client -connect <server-ip>:8084
@@ -133,7 +110,7 @@ Using `openssl`: `echo "Your notification message" | openssl s_client -connect <
     ```
 
 7. **External IP Address Change Alert:**
-    Monitor for changes in your public IP by using **bitvoker** in a script:
+    Monitor for changes in your public IP by using **LogForge-Notifier** in a script:
     ```bash
     #!/bin/bash
     LAST_IP_FILE="/tmp/last_ip.txt"
@@ -164,7 +141,7 @@ Using `openssl`: `echo "Your notification message" | openssl s_client -connect <
     */15 * * * * /path/to/healthcheck.sh
     ```
 
-These examples illustrate just a portion of the creative ways you can integrate **bitvoker** into your environment. By chaining and piping various system commands, you can engineer powerful, automated notifications tailored to your specific homelab or production needs.
+These examples illustrate just a portion of the creative ways you can integrate **LogForge-Notifier** into your environment. By chaining and piping various system commands, you can engineer powerful, automated notifications tailored to your specific homelab or production needs.
 
 ### Web Interface
 
@@ -189,4 +166,4 @@ Access the web interface at `http://<server-ip>:8085` to:
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](https://github.com/rmfatemi/bitvoker/blob/master/LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE]() file for details.
