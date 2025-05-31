@@ -1,31 +1,15 @@
-<<<<<<< HEAD:logforge/server.py
-=======
-import ssl
-import time
-import uvicorn
-import threading
->>>>>>> 4d834f2fb3c670099250d4dffe0fc0692088930c:bitvoker/server.py
 import socketserver
 import ssl
 import threading
+import time
 
-<<<<<<< HEAD:logforge/server.py
 import uvicorn
-=======
-import bitvoker.constants as constants
-
-from bitvoker.api import app
-from bitvoker.handler import Handler
-from bitvoker.logger import setup_logger
-from bitvoker.utils import generate_ssl_cert
-from bitvoker.refresher import refresh_components
->>>>>>> 4d834f2fb3c670099250d4dffe0fc0692088930c:bitvoker/server.py
 
 import logforge.constants as constants
 from logforge.api import app
-from logforge.components import refresh_server_components
 from logforge.handler import Handler
 from logforge.logger import setup_logger
+from logforge.refresher import refresh_components
 from logforge.utils import generate_ssl_cert
 
 logger = setup_logger("server")

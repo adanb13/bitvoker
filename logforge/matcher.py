@@ -1,11 +1,10 @@
 import re
 import socket
-from typing import Dict, Any, Optional, List
+from typing import Any, Dict, List, Optional
 
-from bitvoker.config import Config
-from bitvoker.logger import setup_logger
-from bitvoker.ai import process_with_ai
-
+from logforge.ai import process_with_ai
+from logforge.config import Config
+from logforge.logger import setup_logger
 
 logger = setup_logger("matcher")
 
@@ -138,9 +137,7 @@ class Match:
     def _should_send_original(self, notify_config: Dict[str, Any], text: str, ai_text: Optional[str] = None) -> bool:
         return self._should_send_message(notify_config.get("send_og_text", {}), text, ai_text)
 
-    def _should_send_ai_processed(
-        self, notify_config: Dict[str, Any], text: str, ai_text: str
-    ) -> bool:
+    def _should_send_ai_processed(self, notify_config: Dict[str, Any], text: str, ai_text: str) -> bool:
         return self._should_send_message(notify_config.get("send_ai_text", {}), text, ai_text)
 
     def get_enabled_destinations_by_names(self, destination_names: List[str]) -> Dict[str, Dict[str, Any]]:

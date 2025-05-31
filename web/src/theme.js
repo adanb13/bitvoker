@@ -8,7 +8,12 @@ export const getAppTheme = (mode) => {
       ...(mode === 'light'
         ? {
             // Light theme
-            primary: orange,
+            primary: {
+                      main: '#2496ED', // Docker blue!
+                      dark: '#1572B6',
+                      light: '#5bbcff',
+                      contrastText: '#fff',
+                    },
             secondary: {
               main: grey[600],
             },
@@ -48,7 +53,12 @@ export const getAppTheme = (mode) => {
           }
         : {
             // Dark theme
-            primary: orange,
+            primary: {
+              main: '#2496ED', // Docker blue!
+              dark: '#1572B6',
+              light: '#5bbcff',
+              contrastText: '#fff',
+            },
             secondary: {
               main: grey[500],
             },

@@ -1,10 +1,9 @@
-from typing import Optional, Any
+from typing import Any, Optional
 
-from bitvoker.config import Config
-from bitvoker.matcher import Match
-from bitvoker.notifier import Notifier
-from bitvoker.logger import setup_logger
-
+from logforge.config import Config
+from logforge.logger import setup_logger
+from logforge.matcher import Match
+from logforge.notifier import Notifier
 
 logger = setup_logger("components")
 

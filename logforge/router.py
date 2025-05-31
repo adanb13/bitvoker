@@ -3,13 +3,14 @@ import time
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from bitvoker.config import Config
-from bitvoker.constants import REACT_BUILD_DIR
-from bitvoker.database import get_notifications
-from bitvoker.logger import setup_logger
-from bitvoker.refresher import refresh_components
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import FileResponse, JSONResponse
+
+from logforge.config import Config
+from logforge.constants import REACT_BUILD_DIR
+from logforge.database import get_notifications
+from logforge.logger import setup_logger
+from logforge.refresher import refresh_components
 
 logger = setup_logger("router")
 

@@ -1,8 +1,9 @@
 from typing import Any, Dict, List, Optional
 
 import apprise
-from bitvoker.logger import setup_logger
-from bitvoker.utils import truncate
+
+from logforge.logger import setup_logger
+from logforge.utils import truncate
 
 logger = setup_logger("notifier")
 
@@ -61,7 +62,7 @@ class Notifier:
                 logger.error(f"failed to add destination {destination_conf.get('name', 'unknown')}: {str(e)}")
 
     def send_message(
-        self, message_body: str, title: str = "bitvoker notification", destination_names: Optional[List[str]] = None
+        self, message_body: str, title: str = "logforge notification", destination_names: Optional[List[str]] = None
     ) -> None:
         if not self.destinations_config:
             logger.warning("no notification destinations configured")

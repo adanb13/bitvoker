@@ -2,8 +2,9 @@ import os
 from typing import Any, Dict, List, Optional
 
 import yaml
-from bitvoker.constants import CONFIG_FILENAME
-from bitvoker.logger import setup_logger
+
+from logforge.constants import CONFIG_FILENAME
+from logforge.logger import setup_logger
 
 logger = setup_logger("config")
 
