@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   Box,
   Typography,
@@ -14,9 +14,14 @@ import {
   MenuItem,
   Checkbox,
   TextField,
-  Button
+  Button,
+  Tooltip,
+  Alert,
+  Link,
+  Snackbar
 } from '@mui/material';
-import RuleEditModal from '../RuleEditModal/RuleEditModal';
+
+const LOGFORGE_PRO_URL = "https://log-forge.github.io/logforgeweb/#premium";
 
 const CHANNEL_OPTIONS = [
   'Email',
@@ -27,11 +32,6 @@ const CHANNEL_OPTIONS = [
   'Discord',
   'SMS',
   'Webhook'
-];
-
-const AI_PROVIDERS = [
-  'ollama',
-  'none'
 ];
 
 function parseEmailUrl(url) {
@@ -45,7 +45,7 @@ function parseEmailUrl(url) {
       recipients: u.searchParams.get('to') || ''
     };
   } catch {
-    return { host: '', port: 3333, username: '', password: '', recipients: '' };
+    return { host: '', port: 587, username: '', password: '', recipients: '' };
   }
 }
 
@@ -83,27 +83,36 @@ function buildSmsUrl(dest) {
   return `twilio://${sid}:${token}@${from}/${to}`;
 }
 
-// Minimal valid rule for a destination
-function defaultRuleForDestination(destName) {
-  return {
-    name: `NotifyTo${destName.replace(/\s/g, '')}`,
-    enabled: true,
-    preprompt: 'Summarize logs.',
-    match: { sources: [], og_text_regex: '', ai_text_regex: '' },
-    notify: {
-      destinations: [destName],
-      send_og_text: { enabled: true, og_text_regex: '', ai_text_regex: '' },
-      send_ai_text: { enabled: false, og_text_regex: '', ai_text_regex: '' }
+// Validation function
+function validateDestinations(destinations) {
+  const errors = [];
+  destinations.forEach((dest, i) => {
+    if (dest.name === 'Email') {
+      if (!dest.host) errors.push(`Row ${i + 1} (Email): SMTP Host is required`);
+      if (!dest.port) errors.push(`Row ${i + 1} (Email): Port is required`);
+      if (!dest.username) errors.push(`Row ${i + 1} (Email): Username is required`);
+      if (!dest.password) errors.push(`Row ${i + 1} (Email): Password is required`);
+      if (!dest.recipients) errors.push(`Row ${i + 1} (Email): Recipients is required`);
+    } else if (dest.name === 'SMS') {
+      if (!dest.sid) errors.push(`Row ${i + 1} (SMS): Account SID is required`);
+      if (!dest.token) errors.push(`Row ${i + 1} (SMS): Auth Token is required`);
+      if (!dest.from) errors.push(`Row ${i + 1} (SMS): From Number is required`);
+      if (!dest.to) errors.push(`Row ${i + 1} (SMS): To Number is required`);
+    } else {
+      if (!dest.url) errors.push(`Row ${i + 1} (${dest.name}): URL is required`);
     }
-  };
+  });
+  return errors;
 }
 
 const DestinationsPage = () => {
   const [config, setConfig] = useState({ destinations: [], rules: [], ai: { provider: 'openai' } });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
-  const [editRuleIdx, setEditRuleIdx] = useState(null);
-  const [editRuleOpen, setEditRuleOpen] = useState(false);
+  const [proAlert, setProAlert] = useState('');
+  const [successSnackbar, setSuccessSnackbar] = useState(false);
+  const [validationErrors, setValidationErrors] = useState([]);
+  const errorRef = useRef(null);
 
   useEffect(() => {
     fetch('/api/config')
@@ -127,39 +136,11 @@ const DestinationsPage = () => {
       .catch(err => setError(err.message));
   }, []);
 
-  // Helper: get rule for destination name
-  const ruleForDest = (destName) =>
-    config.rules.find(
-      r => r.notify &&
-        Array.isArray(r.notify.destinations) &&
-        r.notify.destinations.length === 1 &&
-        r.notify.destinations[0] === destName
-    );
+  function canAddType(type) {
+    const typeCount = config.destinations.filter(d => d.name === type).length;
+    return typeCount === 0;
+  }
 
-  // Create a rule for the destination if missing
-  const ensureRuleForDestination = (destName, rulesArr) => {
-    const ruleExists = rulesArr.some(r =>
-      r.notify &&
-      Array.isArray(r.notify.destinations) &&
-      r.notify.destinations.length === 1 &&
-      r.notify.destinations[0] === destName
-    );
-    if (!ruleExists) {
-      return [...rulesArr, defaultRuleForDestination(destName)];
-    }
-    return rulesArr;
-  };
-
-  // Remove rule for a destination (by name)
-  const removeRuleForDestination = (destName, rulesArr) => {
-    return rulesArr.filter(
-      r => !(r.notify && Array.isArray(r.notify.destinations) &&
-        r.notify.destinations.length === 1 &&
-        r.notify.destinations[0] === destName)
-    );
-  };
-
-  // Change handler for destination fields
   const updateDestination = (idx, changes) => {
     let updated = { ...config.destinations[idx], ...changes };
     if (changes.name) {
@@ -197,53 +178,57 @@ const DestinationsPage = () => {
     setConfig(c => ({ ...c, destinations }));
   };
 
-  // Add new destination (no rule is added until save)
   const addDestination = () => {
-    const dest = { name: 'Webhook', enabled: true, url: '' };
+    if (config.destinations.length >= CHANNEL_OPTIONS.length) {
+      setProAlert(
+        <>
+          Multiple destinations of the same type are a feature of{' '}
+          <Link
+            href={LOGFORGE_PRO_URL}
+            color="primary"
+            target="_blank"
+            rel="noopener noreferrer"
+            underline="always"
+            sx={{ fontWeight: 500 }}
+          >
+            LogForge Pro
+          </Link>
+          .
+        </>
+      );
+      return;
+    }
+    const available = CHANNEL_OPTIONS.find(type => canAddType(type));
+    if (!available) {
+      setProAlert(
+        <>
+          Multiple destinations of the same type are a feature of{' '}
+          <Link
+            href={LOGFORGE_PRO_URL}
+            color="primary"
+            target="_blank"
+            rel="noopener noreferrer"
+            underline="always"
+            sx={{ fontWeight: 500 }}
+          >
+            LogForge Pro
+          </Link>
+          .
+        </>
+      );
+      return;
+    }
+    const dest = { name: available, enabled: true, url: '' };
     setConfig(c => ({
       ...c,
       destinations: [...c.destinations, dest]
     }));
   };
 
-  // Remove destination, auto-remove rule (if exists)
   const removeDestination = idx => {
-    const dest = config.destinations[idx];
-    const name = dest.name;
     setConfig(c => ({
       ...c,
-      destinations: c.destinations.filter((_, i) => i !== idx),
-      rules: removeRuleForDestination(name, c.rules)
-    }));
-  };
-
-  // Edit rule for this destination
-  const handleEditRule = (destName) => {
-    const idx = config.rules.findIndex(
-      r => r.notify &&
-        Array.isArray(r.notify.destinations) &&
-        r.notify.destinations.length === 1 &&
-        r.notify.destinations[0] === destName
-    );
-    if (idx >= 0) {
-      setEditRuleIdx(idx);
-      setEditRuleOpen(true);
-    }
-  };
-
-  // Save updated rule
-  const handleSaveRule = (ruleObj) => {
-    let rules = [...config.rules];
-    rules[editRuleIdx] = ruleObj;
-    setConfig(c => ({ ...c, rules }));
-    setEditRuleOpen(false);
-    setEditRuleIdx(null);
-  };
-
-  const handleAIProviderChange = e => {
-    setConfig(c => ({
-      ...c,
-      ai: { ...c.ai, provider: e.target.value }
+      destinations: c.destinations.filter((_, i) => i !== idx)
     }));
   };
 
@@ -251,11 +236,20 @@ const DestinationsPage = () => {
     setSaving(true);
     setError(null);
 
-    // Generate rules for all destinations that don't have one
-    let rules = config.rules;
-    config.destinations.forEach(dest => {
-      rules = ensureRuleForDestination(dest.name, rules);
-    });
+    // Validate before saving
+    const validationErrs = validateDestinations(config.destinations);
+    if (validationErrs.length > 0) {
+      setValidationErrors(validationErrs);
+      setSaving(false);
+      setTimeout(() => {
+        if (errorRef.current) {
+          errorRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 150);
+      return;
+    } else {
+      setValidationErrors([]);
+    }
 
     const payload = {
       ...config,
@@ -280,7 +274,6 @@ const DestinationsPage = () => {
           url: dest.url
         };
       }),
-      rules,
       ai: config.ai && config.ai.provider ? config.ai : { provider: 'openai' }
     };
 
@@ -295,7 +288,8 @@ const DestinationsPage = () => {
       })
       .then(() => {
         setSaving(false);
-        // Fetch updated config to show new rules
+        setProAlert('');
+        setSuccessSnackbar(true);
         fetch('/api/config')
           .then(res => res.json())
           .then(data => {
@@ -321,16 +315,37 @@ const DestinationsPage = () => {
       });
   };
 
-  // At least one destination has a rule?
-  const showRuleColumn = config.destinations.some(dest => ruleForDest(dest.name));
+  const handleCloseSnackbar = () => setSuccessSnackbar(false);
 
   return (
     <Box p={3}>
-      {/* Notification Destinations */}
       <Typography variant="h5" gutterBottom>
         Notification Destinations
       </Typography>
       {error && <Typography color="error" paragraph>{error}</Typography>}
+      {proAlert && (
+        <Alert
+          severity="info"
+          onClose={() => setProAlert('')}
+          sx={{ mb: 2, maxWidth: 600 }}
+        >
+          {proAlert}
+        </Alert>
+      )}
+      {validationErrors.length > 0 && (
+        <Alert
+          severity="error"
+          ref={errorRef}
+          sx={{ mb: 2, maxWidth: 700 }}
+        >
+          Please fix the following errors before saving:
+          <ul style={{ margin: 0, paddingLeft: 20 }}>
+            {validationErrors.map((err, i) => (
+              <li key={i}>{err}</li>
+            ))}
+          </ul>
+        </Alert>
+      )}
 
       <TableContainer component={Paper} sx={{ mb: 2 }}>
         <Table>
@@ -343,110 +358,145 @@ const DestinationsPage = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {config.destinations.map((dest, idx) => {
-              const rule = ruleForDest(dest.name);
-              return (
-                <TableRow key={idx} hover>
-                  <TableCell>
-                    <Select
-                      fullWidth
-                      value={dest.name}
-                      onChange={e => updateDestination(idx, { name: e.target.value })}
-                    >
-                      {CHANNEL_OPTIONS.map(opt => (
-                        <MenuItem key={opt} value={opt}>{opt}</MenuItem>
-                      ))}
-                    </Select>
-                  </TableCell>
-                  <TableCell align="center">
-                    <Checkbox
-                      checked={dest.enabled}
-                      onChange={e => updateDestination(idx, { enabled: e.target.checked })}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    {dest.name === 'Email' ? (
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                        <TextField
-                          label="SMTP Host"
-                          size="small"
-                          value={dest.host || ''}
-                          onChange={e => updateDestination(idx, { host: e.target.value })}
-                        />
-                        <TextField
-                          label="Port"
-                          size="small"
-                          type="number"
-                          value={dest.port || 587}
-                          onChange={e => updateDestination(idx, { port: e.target.value })}
-                        />
-                        <TextField
-                          label="Username"
-                          size="small"
-                          value={dest.username || ''}
-                          onChange={e => updateDestination(idx, { username: e.target.value })}
-                        />
-                        <TextField
-                          label="Password"
-                          size="small"
-                          type="password"
-                          value={dest.password || ''}
-                          onChange={e => updateDestination(idx, { password: e.target.value })}
-                        />
-                        <TextField
-                          label="Recipients"
-                          size="small"
-                          helperText="comma-separated"
-                          value={dest.recipients || ''}
-                          onChange={e => updateDestination(idx, { recipients: e.target.value })}
-                        />
-                      </Box>
-                    ) : dest.name === 'SMS' ? (
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                        <TextField
-                          label="Account SID"
-                          size="small"
-                          value={dest.sid || ''}
-                          onChange={e => updateDestination(idx, { sid: e.target.value })}
-                        />
-                        <TextField
-                          label="Auth Token"
-                          size="small"
-                          type="password"
-                          value={dest.token || ''}
-                          onChange={e => updateDestination(idx, { token: e.target.value })}
-                        />
-                        <TextField
-                          label="From Number"
-                          size="small"
-                          value={dest.from || ''}
-                          onChange={e => updateDestination(idx, { from: e.target.value })}
-                        />
-                        <TextField
-                          label="To Number"
-                          size="small"
-                          value={dest.to || ''}
-                          onChange={e => updateDestination(idx, { to: e.target.value })}
-                        />
-                      </Box>
-                    ) : (
+            {config.destinations.map((dest, idx) => (
+              <TableRow key={idx} hover>
+                <TableCell>
+                  <Select
+                    fullWidth
+                    value={dest.name}
+                    onChange={e => updateDestination(idx, { name: e.target.value })}
+                  >
+                    {CHANNEL_OPTIONS.map(opt => {
+                      const isUsedElsewhere =
+                        config.destinations.some((d, i) => d.name === opt && i !== idx);
+                      if (isUsedElsewhere) {
+                        return (
+                          <Tooltip
+                            key={opt}
+                            title={
+                              <>
+                                Multiple destinations of the same type are a feature of{' '}
+                                <Link
+                                  href={LOGFORGE_PRO_URL}
+                                  color="primary"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  underline="always"
+                                  sx={{ fontWeight: 500 }}
+                                  onClick={e => e.stopPropagation()}
+                                >
+                                  LogForge Pro
+                                </Link>
+                                .
+                              </>
+                            }
+                            arrow
+                            placement="right"
+                          >
+                            <span>
+                              <MenuItem value={opt} disabled style={{ color: "#888" }}>
+                                {opt}
+                              </MenuItem>
+                            </span>
+                          </Tooltip>
+                        );
+                      }
+                      return (
+                        <MenuItem key={opt} value={opt}>
+                          {opt}
+                        </MenuItem>
+                      );
+                    })}
+                  </Select>
+                </TableCell>
+                <TableCell align="center">
+                  <Checkbox
+                    checked={dest.enabled}
+                    onChange={e => updateDestination(idx, { enabled: e.target.checked })}
+                  />
+                </TableCell>
+                <TableCell>
+                  {dest.name === 'Email' ? (
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                       <TextField
-                        fullWidth
+                        label="SMTP Host"
                         size="small"
-                        value={dest.url}
-                        placeholder="Paste webhook URL or credentials"
-                        onChange={e => updateDestination(idx, { url: e.target.value })}
+                        value={dest.host || ''}
+                        onChange={e => updateDestination(idx, { host: e.target.value })}
                       />
-                    )}
-                  </TableCell>
-                  <TableCell align="center">
-                    <Button color="error" size="small" onClick={() => removeDestination(idx)}>
-                      Remove
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+                      <TextField
+                        label="Port"
+                        size="small"
+                        type="number"
+                        value={dest.port || 587}
+                        onChange={e => updateDestination(idx, { port: e.target.value })}
+                      />
+                      <TextField
+                        label="Username"
+                        size="small"
+                        value={dest.username || ''}
+                        onChange={e => updateDestination(idx, { username: e.target.value })}
+                      />
+                      <TextField
+                        label="Password"
+                        size="small"
+                        type="password"
+                        value={dest.password || ''}
+                        onChange={e => updateDestination(idx, { password: e.target.value })}
+                      />
+                      <TextField
+                        label="Recipients"
+                        size="small"
+                        helperText="comma-separated"
+                        value={dest.recipients || ''}
+                        onChange={e => updateDestination(idx, { recipients: e.target.value })}
+                      />
+                    </Box>
+                  ) : dest.name === 'SMS' ? (
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                      <TextField
+                        label="Account SID"
+                        size="small"
+                        value={dest.sid || ''}
+                        onChange={e => updateDestination(idx, { sid: e.target.value })}
+                      />
+                      <TextField
+                        label="Auth Token"
+                        size="small"
+                        type="password"
+                        value={dest.token || ''}
+                        onChange={e => updateDestination(idx, { token: e.target.value })}
+                      />
+                      <TextField
+                        label="From Number"
+                        size="small"
+                        value={dest.from || ''}
+                        onChange={e => updateDestination(idx, { from: e.target.value })}
+                      />
+                      <TextField
+                        label="To Number"
+                        size="small"
+                        value={dest.to || ''}
+                        onChange={e => updateDestination(idx, { to: e.target.value })}
+                      />
+                    </Box>
+                  ) : (
+                    <TextField
+                      fullWidth
+                      size="small"
+                      value={dest.url}
+                      placeholder="Paste webhook URL or credentials"
+                      onChange={e => updateDestination(idx, { url: e.target.value })}
+                    />
+                  )}
+                </TableCell>
+                <TableCell align="center">
+                  <Button color="error" size="small" onClick={() => removeDestination(idx)}>
+                    Remove
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </TableContainer>
@@ -460,6 +510,22 @@ const DestinationsPage = () => {
         </Button>
       </Box>
       <Divider sx={{ my: 6 }} />
+
+      {/* Snackbar for success */}
+      <Snackbar
+        open={successSnackbar}
+        autoHideDuration={4000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity="success"
+          sx={{ width: '100%' }}
+        >
+          Destinations saved successfully
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

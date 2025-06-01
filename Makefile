@@ -22,12 +22,12 @@ check: ## Run checks: lock file consistency, linting, and obsolete dependency ch
 	@poetry run deptry .
 
 .PHONY: docker-build
-docker-build: ## Build the bitvoker Docker image.
-	docker build -t bitvoker -f Dockerfile .
+docker-build: ## Build the logforge Docker image.
+	docker build -t logforge -f Dockerfile .
 
 .PHONY: docker-run
-docker-run: ## Run the container named bitvoker using the bitvoker image.
-	docker volume create bitvoker_data && docker run -p 8083:8083 -p 8084:8084 -p 8085:8085 -v bitvoker_data:/app/data -v /etc/localtime:/etc/localtime:ro --name bitvoker bitvoker
+docker-run: ## Run the container named logforge using the logforge image.
+	docker volume create logforge_data && docker run -p 8083:8083 -p 8084:8084 -p 8085:8085 -v logforge_data:/app/data -v /etc/localtime:/etc/localtime:ro --name logforge logforge
 
 .PHONY: docker
 docker: clean docker-build docker-run
@@ -35,8 +35,8 @@ docker: clean docker-build docker-run
 .PHONY: clean
 clean: ## Clean Docker containers, volumes, Python cache, build artifacts and temporary files.
 	@echo "Cleaning Docker resources..."
-	-docker rm -f bitvoker 2>/dev/null || true
-	-docker volume rm bitvoker_data 2>/dev/null || true
+	-docker rm -f logforge 2>/dev/null || true
+	-docker volume rm logforge_data 2>/dev/null || true
 	@echo "Cleaning Python cache files..."
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	find . -type f -name "*.pyc" -delete

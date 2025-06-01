@@ -8,7 +8,7 @@ import {
 } from '@mui/material';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
-import bitvokerLogo from '../../assets/bitvoker.png';
+import logforgeLogo from '../../assets/logforge.png';
 
 function Header({ toggleTheme, theme }) {
   return (
@@ -21,14 +21,14 @@ function Header({ toggleTheme, theme }) {
       <Toolbar sx={{ justifyContent: 'space-between' }}>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <img
-            src={bitvokerLogo}
-            alt="Bitvoker Logo"
+            src={logforgeLogo}
+            alt="LogForge Logo"
             width="32"
             height="32"
             style={{ marginRight: '10px' }}
           />
           <Typography variant="h6" component="h1">
-            bitvoker
+            LogForge
           </Typography>
         </Box>
 

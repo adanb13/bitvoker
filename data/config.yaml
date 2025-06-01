@@ -22,4 +22,4 @@ rules:
       enabled: false
       og_text_regex: null
       ai_text_regex: null
-destinations:
+destinations: []

@@ -3,10 +3,10 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
-name = "bitvoker"
+name = "logforge"
 version = "1.2.0"
-description = "bitvoker notification system"
-authors = ["Rasool Fatemi <rmfatemi@gmail.com>"]
+description = "logforge notification system"
+authors = ["LogForge <logforge@gmail.com>"]
 readme = "README.md"
 
 packages = [
