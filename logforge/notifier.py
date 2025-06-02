@@ -3,7 +3,6 @@ from typing import Any, Dict, List, Optional
 import apprise
 
 from logforge.logger import setup_logger
-from logforge.utils import truncate
 
 logger = setup_logger("notifier")
 
@@ -67,8 +66,6 @@ class Notifier:
         if not self.destinations_config:
             logger.warning("no notification destinations configured")
             return
-
-        message_body = truncate(message_body, 4000, preserve_newlines=True, suffix="\n[truncated]")
 
         try:
             if destination_names:

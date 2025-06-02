@@ -10,7 +10,20 @@ logger = setup_logger("handler")
 
 class Handler(socketserver.BaseRequestHandler):
     def handle(self):
-        data = self.request.recv(1024).strip()
+        try:
+            chunks = []
+            while True:
+                chunk = self.request.recv(4096)
+                if not chunk:
+                    break
+                chunks.append(chunk)
+                if len(chunk) < 4096:
+                    break
+            data = b"".join(chunks).strip()
+        except Exception as e:
+            logger.exception(f"error reading socket data: {e}")
+            return
+
         original_message = data.decode("utf-8")
 
         if not original_message or original_message.strip() == "":
@@ -21,7 +34,7 @@ class Handler(socketserver.BaseRequestHandler):
 
         ts = strftime("%Y-%m-%d %H:%M:%S", localtime())
         client_ip = self.client_address[0]
-        title = f"[{ts} - Notification from {client_ip}]"
+        title = f"[LogForge - Notification from {client_ip}]"
 
         match_result = self.server.match.process(client_ip, original_message) if hasattr(self.server, "match") else None
 

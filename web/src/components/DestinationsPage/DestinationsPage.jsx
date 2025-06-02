@@ -83,6 +83,28 @@ function buildSmsUrl(dest) {
   return `twilio://${sid}:${token}@${from}/${to}`;
 }
 
+// ---- Pushover helpers ----
+function parsePushoverUrl(url) {
+  // Format: pover://USER_KEY@API_TOKEN
+  try {
+    if (!url.startsWith('pover://')) return { userkey: '', apitoken: '' };
+    const [userkey, apitoken] = url.replace('pover://', '').split('@');
+    return {
+      userkey: userkey || '',
+      apitoken: apitoken || ''
+    };
+  } catch {
+    return { userkey: '', apitoken: '' };
+  }
+}
+
+function buildPushoverUrl(dest) {
+  const userkey = dest.userkey || '';
+  const apitoken = dest.apitoken || '';
+  return `pover://${userkey}@${apitoken}`;
+}
+
+// ---- SYNC NOTIFY DESTINATIONS ----
 function syncRuleNotifyDestinations(destinations, rules) {
   const ruleIdx = rules.findIndex(r => r.name === "default-rule");
   if (ruleIdx === -1) return rules;
@@ -113,6 +135,9 @@ function validateDestinations(destinations) {
       if (!dest.token) errors.push(`Row ${i + 1} (SMS): Auth Token is required`);
       if (!dest.from) errors.push(`Row ${i + 1} (SMS): From Number is required`);
       if (!dest.to) errors.push(`Row ${i + 1} (SMS): To Number is required`);
+    } else if (dest.name === 'Pushover') {
+      if (!dest.userkey) errors.push(`Row ${i + 1} (Pushover): User Key is required`);
+      if (!dest.apitoken) errors.push(`Row ${i + 1} (Pushover): API Token is required`);
     } else {
       if (!dest.url) errors.push(`Row ${i + 1} (${dest.name}): URL is required`);
     }
@@ -139,6 +164,9 @@ const DestinationsPage = () => {
           }
           if (dest.name === 'SMS') {
             return { ...dest, ...parseSmsUrl(dest.url) };
+          }
+          if (dest.name === 'Pushover') {
+            return { ...dest, ...parsePushoverUrl(dest.url) };
           }
           return dest;
         });
@@ -180,6 +208,14 @@ const DestinationsPage = () => {
           to: "",
           url: ""
         };
+      } else if (changes.name === "Pushover") {
+        updated = {
+          name: "Pushover",
+          enabled: updated.enabled !== undefined ? updated.enabled : true,
+          userkey: "",
+          apitoken: "",
+          url: ""
+        };
       } else {
         updated = {
           name: changes.name,
@@ -190,7 +226,6 @@ const DestinationsPage = () => {
     }
     let destinations = [...config.destinations];
     destinations[idx] = updated;
-    // ---- SYNC DESTINATIONS WITH RULE ----
     const newRules = syncRuleNotifyDestinations(destinations, config.rules);
     setConfig(c => ({ ...c, destinations, rules: newRules }));
   };
@@ -235,8 +270,12 @@ const DestinationsPage = () => {
       );
       return;
     }
-    const dest = { name: available, enabled: true, url: '' };
-    // ---- SYNC DESTINATIONS WITH RULE ----
+    let dest;
+    if (available === "Pushover") {
+      dest = { name: available, enabled: true, userkey: "", apitoken: "", url: "" };
+    } else {
+      dest = { name: available, enabled: true, url: "" };
+    }
     setConfig(c => {
       const newDestinations = [...c.destinations, dest];
       const newRules = syncRuleNotifyDestinations(newDestinations, c.rules);
@@ -288,6 +327,13 @@ const DestinationsPage = () => {
             url: buildSmsUrl(dest)
           };
         }
+        if (dest.name === 'Pushover') {
+          return {
+            name: dest.name,
+            enabled: dest.enabled,
+            url: buildPushoverUrl(dest)
+          };
+        }
         return {
           name: dest.name,
           enabled: dest.enabled,
@@ -319,6 +365,9 @@ const DestinationsPage = () => {
               }
               if (dest.name === 'SMS') {
                 return { ...dest, ...parseSmsUrl(dest.url) };
+              }
+              if (dest.name === 'Pushover') {
+                return { ...dest, ...parsePushoverUrl(dest.url) };
               }
               return dest;
             });
@@ -498,6 +547,21 @@ const DestinationsPage = () => {
                         size="small"
                         value={dest.to || ''}
                         onChange={e => updateDestination(idx, { to: e.target.value })}
+                      />
+                    </Box>
+                  ) : dest.name === 'Pushover' ? (
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                      <TextField
+                        label="User Key"
+                        size="small"
+                        value={dest.userkey || ''}
+                        onChange={e => updateDestination(idx, { userkey: e.target.value })}
+                      />
+                      <TextField
+                        label="API Token"
+                        size="small"
+                        value={dest.apitoken || ''}
+                        onChange={e => updateDestination(idx, { apitoken: e.target.value })}
                       />
                     </Box>
                   ) : (
