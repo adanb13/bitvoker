@@ -83,6 +83,21 @@ function buildSmsUrl(dest) {
   return `twilio://${sid}:${token}@${from}/${to}`;
 }
 
+function syncRuleNotifyDestinations(destinations, rules) {
+  const ruleIdx = rules.findIndex(r => r.name === "default-rule");
+  if (ruleIdx === -1) return rules;
+  const destNames = destinations.map(dest => dest.name);
+  const updatedRules = [...rules];
+  updatedRules[ruleIdx] = {
+    ...rules[ruleIdx],
+    notify: {
+      ...rules[ruleIdx].notify,
+      destinations: destNames
+    }
+  };
+  return updatedRules;
+}
+
 // Validation function
 function validateDestinations(destinations) {
   const errors = [];
@@ -175,7 +190,9 @@ const DestinationsPage = () => {
     }
     let destinations = [...config.destinations];
     destinations[idx] = updated;
-    setConfig(c => ({ ...c, destinations }));
+    // ---- SYNC DESTINATIONS WITH RULE ----
+    const newRules = syncRuleNotifyDestinations(destinations, config.rules);
+    setConfig(c => ({ ...c, destinations, rules: newRules }));
   };
 
   const addDestination = () => {
@@ -219,17 +236,20 @@ const DestinationsPage = () => {
       return;
     }
     const dest = { name: available, enabled: true, url: '' };
-    setConfig(c => ({
-      ...c,
-      destinations: [...c.destinations, dest]
-    }));
+    // ---- SYNC DESTINATIONS WITH RULE ----
+    setConfig(c => {
+      const newDestinations = [...c.destinations, dest];
+      const newRules = syncRuleNotifyDestinations(newDestinations, c.rules);
+      return { ...c, destinations: newDestinations, rules: newRules };
+    });
   };
 
   const removeDestination = idx => {
-    setConfig(c => ({
-      ...c,
-      destinations: c.destinations.filter((_, i) => i !== idx)
-    }));
+    setConfig(c => {
+      const newDestinations = c.destinations.filter((_, i) => i !== idx);
+      const newRules = syncRuleNotifyDestinations(newDestinations, c.rules);
+      return { ...c, destinations: newDestinations, rules: newRules };
+    });
   };
 
   const handleSave = () => {
